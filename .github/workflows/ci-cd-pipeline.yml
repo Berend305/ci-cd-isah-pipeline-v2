@@ -13,18 +13,30 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+
     steps:
-      # Stap 1: Checkout code
+      # Stap 1: Checkout de code
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Stap 2: Kubernetes configuratie instellen
+      # Stap 2: Stel de Kubernetes-configuratie in
       - name: Set up Kubernetes config
         env:
           KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG }}
         run: |
-          echo "${KUBE_CONFIG_DATA}" > kubeconfig
-          export KUBECONFIG=kubeconfig
+          echo "${KUBE_CONFIG_DATA}" > $HOME/.kube/config
+          export KUBECONFIG=$HOME/.kube/config
+
+      # Debug stap 1: Controleer of de kubeconfig correct is ingesteld
+      - name: Debug kubeconfig
+        run: |
+          echo "KUBECONFIG is set to $KUBECONFIG"
+          cat $HOME/.kube/config
+
+      # Debug stap 2: Controleer of de Kubernetes API toegankelijk is
+      - name: Test API accessibility
+        run: |
+          curl -k https://192.168.151.245:6443
 
       # Stap 3: Verwijder bestaande resources
       - name: Delete existing resources
@@ -32,7 +44,7 @@ jobs:
           kubectl delete -f k3s/ --ignore-not-found
           echo "Existing resources deleted"
 
-      # Stap 4: Controleer of resources zijn verwijderd
+      # Stap 4: Controleer of de resources zijn verwijderd
       - name: Verify deletion
         run: |
           kubectl get all || echo "No resources remaining"
@@ -43,7 +55,7 @@ jobs:
           kubectl apply -f k3s/
           echo "New resources deployed"
 
-      # Stap 6: Controleer de status
+      # Stap 6: Controleer de status van de deployment
       - name: Verify deployment
         run: |
           kubectl get pods
