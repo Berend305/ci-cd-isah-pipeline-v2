@@ -14,7 +14,7 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      # Stap 1: Code ophalen
+      # Stap 1: Checkout code
       - name: Checkout code
         uses: actions/checkout@v3
 
@@ -26,12 +26,24 @@ jobs:
           echo "${KUBE_CONFIG_DATA}" > kubeconfig
           export KUBECONFIG=kubeconfig
 
-      # Stap 3: Kubernetes resources deployen
-      - name: Deploy to k3s cluster
+      # Stap 3: Verwijder bestaande resources
+      - name: Delete existing resources
+        run: |
+          kubectl delete -f k3s/ --ignore-not-found
+          echo "Existing resources deleted"
+
+      # Stap 4: Controleer of resources zijn verwijderd
+      - name: Verify deletion
+        run: |
+          kubectl get all || echo "No resources remaining"
+
+      # Stap 5: Deploy nieuwe resources
+      - name: Deploy new resources
         run: |
           kubectl apply -f k3s/
+          echo "New resources deployed"
 
-      # Stap 4: Verifieer de deployment
+      # Stap 6: Controleer de status
       - name: Verify deployment
         run: |
           kubectl get pods
