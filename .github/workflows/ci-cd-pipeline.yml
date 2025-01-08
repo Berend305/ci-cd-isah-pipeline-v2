@@ -11,26 +11,28 @@ on:
       - develop
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
+      # Stap 1: Code uit de repository ophalen
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Install dependencies (voorbeeld voor Node.js)
-        run: |
-          npm install
-          npm test
-
-  deploy:
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Deploy to Kubernetes
+      # Stap 2: Kubernetes-configuratie instellen met de secret
+      - name: Set up Kubernetes config
         env:
           KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG }}
         run: |
-          kubectl apply -f k8s/
+          echo "${KUBE_CONFIG_DATA}" > kubeconfig
+          export KUBECONFIG=kubeconfig
+
+      # Stap 3: Resources deployen naar k3s
+      - name: Deploy to k3s cluster
+        run: |
+          kubectl apply -f k3s/
+
+      # Stap 4: Verifiëren van de deployment
+      - name: Verify deployment
+        run: |
+          kubectl get pods
+          kubectl get svc
