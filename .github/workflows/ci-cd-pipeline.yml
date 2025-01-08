@@ -24,6 +24,7 @@ jobs:
         env:
           KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG }}
         run: |
+          mkdir -p $HOME/.kube # Zorg ervoor dat de .kube map bestaat
           echo "${KUBE_CONFIG_DATA}" > $HOME/.kube/config
           export KUBECONFIG=$HOME/.kube/config
 
