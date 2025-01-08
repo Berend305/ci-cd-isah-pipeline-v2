@@ -34,6 +34,11 @@ jobs:
           echo "KUBECONFIG is set to $KUBECONFIG"
           cat $HOME/.kube/config
 
+      # Debug stap 2: Controleer of de Kubernetes API toegankelijk is
+      - name: Test API accessibility
+        run: |
+          curl -k https://172.0.0.1:6443
+
       # Stap 3: Verwijder bestaande resources
       - name: Delete existing resources
         run: |
